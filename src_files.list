@@ -1,0 +1,9 @@
+shared_pkg.sv
+interface.sv
+FIFO.sv 
+FIFO_TRANSACTIONS.sv
+func_cov_collection.sv 
+scoreboard.sv
+Monitor.sv 
+testbench_fifo.sv
+top.sv 

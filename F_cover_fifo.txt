@@ -1,0 +1,210 @@
+COVERGROUP COVERAGE:
+-----------------------------------------------------------------------------------------------
+Covergroup                                             Metric       Goal    Status               
+                                                                                              
+-----------------------------------------------------------------------------------------------
+ TYPE /func_pkg/FIFO_coverage/cvr_grp                  100.0%        100    Covered              
+    covered/total bins:                                    64         64                      
+    missing/total bins:                                     0         64                      
+    % Hit:                                             100.0%        100                      
+    Coverpoint cvr_grp::write_enable                   100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin wr_enable_low                               12826          1    Covered              
+        bin wr_enable_high                              17176          1    Covered              
+    Coverpoint cvr_grp::read_enable                    100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin rd_enable_low                               19937          1    Covered              
+        bin rd_enable_high                              10065          1    Covered              
+    Coverpoint cvr_grp::FULL                           100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin Full_low                                    28105          1    Covered              
+        bin Full_high                                    1897          1    Covered              
+    Coverpoint cvr_grp::EMPTY                          100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin Empty_low                                   24387          1    Covered              
+        bin Empty_high                                   5615          1    Covered              
+    Coverpoint cvr_grp::ALMOSTFULL                     100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin Almostfull_low                              27992          1    Covered              
+        bin Almostfull_high                              2010          1    Covered              
+    Coverpoint cvr_grp::ALMOSTEMPTY                    100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin Almostempty_low                             23463          1    Covered              
+        bin Almostempty_high                             6539          1    Covered              
+    Coverpoint cvr_grp::OVERFLOW                       100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin Overflow_low                                28882          1    Covered              
+        bin Overflow_high                                1120          1    Covered              
+    Coverpoint cvr_grp::UNDERFLOW                      100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin Underflow_low                               25757          1    Covered              
+        bin Underflow_high                               4245          1    Covered              
+    Coverpoint cvr_grp::Write_ack                      100.0%        100    Covered              
+        covered/total bins:                                 2          2                      
+        missing/total bins:                                 0          2                      
+        % Hit:                                         100.0%        100                      
+        bin write_acknowledge_low                       13946          1    Covered              
+        bin write_acknowledge_high                      16056          1    Covered              
+    Cross cvr_grp::rd_en_with_wr_enable_full           100.0%        100    Covered              
+        covered/total bins:                                 6          6                      
+        missing/total bins:                                 0          6                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,Full_low>       8841          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Full_low> 
+                                                         3585          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Full_low> 
+                                                         9199          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Full_low> 
+                                                         6480          1    Covered              
+        bin <rd_enable_low,wr_enable_low,Full_high> 
+                                                          400          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Full_high> 
+                                                         1497          1    Covered              
+        ignore_bin read_enable_with_full_high               0               ZERO                 
+    Cross cvr_grp::rd_en_with_wr_enable_empty          100.0%        100    Covered              
+        covered/total bins:                                 6          6                      
+        missing/total bins:                                 0          6                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,Empty_low> 
+                                                         5143          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Empty_low> 
+                                                        10696          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Empty_low> 
+                                                         2068          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Empty_low> 
+                                                         6480          1    Covered              
+        bin <rd_enable_low,wr_enable_low,Empty_high> 
+                                                         4098          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Empty_high> 
+                                                         1517          1    Covered              
+        ignore_bin write_enable_with_empty_high             0               ZERO                 
+    Cross cvr_grp::rd_en_with_wr_enable_almostfull     100.0%        100    Covered              
+        covered/total bins:                                 8          8                      
+        missing/total bins:                                 0          8                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,Almostfull_low> 
+                                                         8804          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Almostfull_low> 
+                                                         3386          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Almostfull_low> 
+                                                        10124          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Almostfull_low> 
+                                                         5678          1    Covered              
+        bin <rd_enable_low,wr_enable_low,Almostfull_high> 
+                                                          437          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Almostfull_high> 
+                                                          199          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Almostfull_high> 
+                                                          572          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Almostfull_high> 
+                                                          802          1    Covered              
+    Cross cvr_grp::rd_en_with_wr_enable_almostempty 
+                                                       100.0%        100    Covered              
+        covered/total bins:                                 8          8                      
+        missing/total bins:                                 0          8                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,Almostempty_low> 
+                                                         7836          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Almostempty_low> 
+                                                         3035          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Almostempty_low> 
+                                                         8711          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Almostempty_low> 
+                                                         3881          1    Covered              
+        bin <rd_enable_low,wr_enable_low,Almostempty_high> 
+                                                         1405          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Almostempty_high> 
+                                                          550          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Almostempty_high> 
+                                                         1985          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Almostempty_high> 
+                                                         2599          1    Covered              
+    Cross cvr_grp::rd_en_with_wr_enable_underflow      100.0%        100    Covered              
+        covered/total bins:                                 6          6                      
+        missing/total bins:                                 0          6                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,Underflow_low> 
+                                                         8304          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Underflow_low> 
+                                                         2862          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Underflow_low> 
+                                                         9245          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Underflow_low> 
+                                                         5346          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Underflow_high> 
+                                                          723          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Underflow_high> 
+                                                         1134          1    Covered              
+        ignore_bin read_with_underflow                   2388               Occurred             
+    Cross cvr_grp::rd_en_with_wr_enable_overflow       100.0%        100    Covered              
+        covered/total bins:                                 6          6                      
+        missing/total bins:                                 0          6                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,Overflow_low> 
+                                                         9241          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Overflow_low> 
+                                                         9944          1    Covered              
+        bin <rd_enable_high,wr_enable_low,Overflow_low> 
+                                                         3585          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Overflow_low> 
+                                                         6112          1    Covered              
+        bin <rd_enable_low,wr_enable_high,Overflow_high> 
+                                                          752          1    Covered              
+        bin <rd_enable_high,wr_enable_high,Overflow_high> 
+                                                          368          1    Covered              
+        ignore_bin write_with_overflow                      0               ZERO                 
+    Cross cvr_grp::rd_en_with_wr_enable_wr_ack         100.0%        100    Covered              
+        covered/total bins:                                 6          6                      
+        missing/total bins:                                 0          6                      
+        % Hit:                                         100.0%        100                      
+        bin <rd_enable_low,wr_enable_low,write_acknowledge_low> 
+                                                         9241          1    Covered              
+        bin <rd_enable_low,wr_enable_high,write_acknowledge_low> 
+                                                          752          1    Covered              
+        bin <rd_enable_high,wr_enable_low,write_acknowledge_low> 
+                                                         3585          1    Covered              
+        bin <rd_enable_high,wr_enable_high,write_acknowledge_low> 
+                                                          368          1    Covered              
+        bin <rd_enable_low,wr_enable_high,write_acknowledge_high> 
+                                                         9944          1    Covered              
+        bin <rd_enable_high,wr_enable_high,write_acknowledge_high> 
+                                                         6112          1    Covered              
+        ignore_bin write_with_wr_ack                        0               ZERO                 
+ CLASS FIFO_coverage
+
+TOTAL COVERGROUP COVERAGE: 100.0%  COVERGROUP TYPES: 1
+
+DIRECTIVE COVERAGE:
+---------------------------------------------------------------------------------------------
+Name                                     Design Design   Lang File(Line)      Count Status    
+                                         Unit   UnitType                                      
+---------------------------------------------------------------------------------------------
+/top/DUT/cvr_reset                       FIFO   Verilog  SVA  FIFO.sv(87)      2611 Covered   
+/top/DUT/wr_ack_cvr                      FIFO   Verilog  SVA  FIFO.sv(94)     14571 Covered   
+/top/DUT/overflow_cvr                    FIFO   Verilog  SVA  FIFO.sv(100)     1017 Covered   
+/top/DUT/underflow_cvr                   FIFO   Verilog  SVA  FIFO.sv(106)     1682 Covered   
+/top/DUT/empty_cvr                       FIFO   Verilog  SVA  FIFO.sv(112)     5029 Covered   
+/top/DUT/full_cvr                        FIFO   Verilog  SVA  FIFO.sv(118)     1719 Covered   
+/top/DUT/almostfull_cvr                  FIFO   Verilog  SVA  FIFO.sv(124)     1838 Covered   
+/top/DUT/almostempty_cvr                 FIFO   Verilog  SVA  FIFO.sv(130)     5894 Covered   
+/top/DUT/pointer_wraparound_cvr_write    FIFO   Verilog  SVA  FIFO.sv(138)      953 Covered   
+/top/DUT/pointer_wraparound_cvr_read     FIFO   Verilog  SVA  FIFO.sv(146)      331 Covered   
+/top/DUT/threshold_cvr                   FIFO   Verilog  SVA  FIFO.sv(153)    27091 Covered   
+
+TOTAL DIRECTIVE COVERAGE: 100.0%  COVERS: 11

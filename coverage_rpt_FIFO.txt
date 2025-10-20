@@ -1,0 +1,520 @@
+Coverage Report by file with details
+
+=================================================================================
+=== File: FIFO.sv
+=================================================================================
+Statement Coverage:
+    Enabled Coverage            Active      Hits    Misses % Covered
+    ----------------            ------      ----    ------ ---------
+    Stmts                           38        38         0     100.0
+
+================================Statement Details================================
+
+Statement Coverage for file FIFO.sv --
+
+    1                                                module FIFO(fifo_intf.DUT intf); 
+    2                                                localparam max_fifo_addr = $clog2( intf.FIFO_DEPTH); //ceiling log with base 2 
+    3                                                //Depth mem word
+    4                                                reg [ intf.FIFO_WIDTH-1:0] mem [intf.FIFO_DEPTH-1:0];
+    5                                                
+    6                                                reg [max_fifo_addr-1:0] wr_ptr, rd_ptr;
+    7                                                reg [max_fifo_addr:0] count; //4-bits
+    8                                                //WRITE
+    9               1                      32613     always @(posedge intf.clk or negedge intf.rst_n) begin 
+    10                                               	if (!intf.rst_n) begin
+    11              1                       5522     		wr_ptr <= 0; 
+    12              1                       5522     		intf.overflow<=0;
+    13              1                       5522     		intf.wr_ack<=0;
+    14              1                       5522     		intf.wr_en<=0;
+    15                                               	end
+    16                                               	else if(intf.wr_en && intf.rd_en && intf.empty )begin
+    17              1                       1134     		mem[wr_ptr] <= intf.data_in;
+    18              1                       1134     		intf.wr_ack <= 1;
+    19              1                       1134     		wr_ptr <= wr_ptr + 1;
+    20              1                       1134     		intf.overflow<=0;
+    21                                               
+    22                                               	end
+    23                                               	else if (intf.wr_en && !intf.full)
+    24                                               	 begin 
+    25              1                      14922     		mem[wr_ptr] <= intf.data_in;
+    26              1                      14922     		intf.wr_ack <= 1;
+    27              1                      14922     		wr_ptr <= (wr_ptr == intf.FIFO_DEPTH-1) ? 0 : wr_ptr + 1;//adding checker to check the wraparound
+    28              1                      14922     		wr_ptr <= wr_ptr + 1;
+    29              1                      14922     		intf.overflow<=0;
+    30                                               	end
+    31                                               	else begin 
+    32              1                      11035     		intf.wr_ack <= 0; 
+    33                                               		if (intf.full && intf.wr_en)
+    34              1                       1120     			intf.overflow <= 1;
+    35                                               		else
+    36              1                       9915     			intf.overflow <= 0;
+    37                                               	end
+    38                                               end
+    39                                               //READ
+    40              1                      32613     always @(posedge intf.clk or negedge intf.rst_n) begin
+    41                                               	if (!intf.rst_n) begin
+    42              1                       5522     		rd_ptr <= 0;
+    43              1                       5522     		intf.underflow<=0;
+    44              1                       5522     		intf.data_out<=0;
+    45              1                       5522     		intf.rd_en<=0;
+    46                                               	end 
+    47                                               	else if (intf.rd_en && (intf.full || !intf.empty)) 
+    48                                               	begin //read
+    49              1                       8208     		intf.data_out <= mem[rd_ptr];
+    50              1                       8208     		rd_ptr <= (rd_ptr == intf.FIFO_DEPTH-1) ? 0 : rd_ptr + 1;//adding checker to check the wraparound
+    51              1                       8208     		rd_ptr <= rd_ptr + 1;
+    52              1                       8208     		intf.underflow<=0;	
+    53                                               	end
+    54                                               		else if (intf.empty && intf.rd_en) //bug==>adding underflow here not below
+    55              1                       1857      			intf.underflow  <= 1; 
+    56                                               end
+    57                                               
+    58              1                      29495     always @(posedge intf.clk or negedge intf.rst_n) begin
+    59                                               	if (!intf.rst_n) begin
+    60              1                       5469     		count <= 0;
+    61                                               	end
+    62                                               	else begin
+    63                                               		if	( ({intf.wr_en, intf.rd_en} == 2'b10) && !intf.full) 
+    64              1                       9944     			count <= count + 1;
+    65                                               		else if ( ({intf.wr_en, intf.rd_en} == 2'b01) && !intf.empty)
+    66              1                       2862     			count <= count - 1; //bug==>adding 2 cases when write and read enable are asserted
+    67                                               		else if ( ({ intf.wr_en,  intf.rd_en} == 2'b11) && intf.full)  
+    68              1                        368                 count <= count - 1; 
+    69                                                       else if ( ({ intf.wr_en,  intf.rd_en} == 2'b11) && intf.empty) 
+    70              1                       1134                 count <= count + 1;
+    71                                               
+    72                                               	end
+    73                                               end
+    74                                               
+    75                                               
+    76              1                      16634     assign intf.full = (count ==  intf.FIFO_DEPTH)? 1 : 0;
+    77              1                      16634     assign intf.empty = (count == 0)? 1 : 0; 
+    78              1                      16634     assign intf.almostfull = (count ==  intf.FIFO_DEPTH-1)? 1 : 0; //bug FIFO_DEPTH-2 should be -1
+    79              1                      16634     assign intf.almostempty = (count == 1)? 1 : 0;
+    80                                               
+    81                                               //Add assertions only in simulation, not in synthesis.
+    82                                               `ifdef SIM
+    83                                               //ASSERTIONS
+    84              1                      26964     always_comb begin 
+    85                                               if(!intf.rst_n) begin
+    86                                               reset: assert final(count == 0 && wr_ptr==0 && rd_ptr==0 );  
+    87                                               cvr_reset:cover final(count == 0 && wr_ptr==0 && rd_ptr==0); 
+    88                                               end 
+    89                                               end
+    90                                               property p1;
+    91                                               @(posedge intf.clk) disable iff(!intf.rst_n) (intf.wr_en && !intf.full) |=>(intf.wr_ack)
+    92                                               endproperty
+    93                                               wr_ack_assert: assert property(p1);
+    94                                               wr_ack_cvr: cover property(p1);
+    95                                               
+    96                                               property p2;
+    97                                               @(posedge intf.clk) disable iff(!intf.rst_n) (intf.wr_en && intf.full) |=>(intf.overflow);
+    98                                               endproperty
+    99                                               overflow_assert: assert property(p2);
+    100                                              overflow_cvr: cover property(p2);
+    101                                              
+    102                                              property p3;
+    103                                              @(posedge intf.clk) disable iff(!intf.rst_n) (intf.rd_en && intf.empty) |=>(intf.underflow);
+    104                                              endproperty
+    105                                              underflow_assert: assert property(p3);
+    106                                              underflow_cvr: cover property(p3);
+    107                                              
+    108                                              property p4;
+    109                                              @(posedge intf.clk) disable iff(!intf.rst_n) (!count) |->(intf.empty);
+    110                                              endproperty
+    111                                              empty_assert: assert property(p4);
+    112                                              empty_cvr: cover property(p4);
+    113                                              
+    114                                              property p5;
+    115                                              @(posedge intf.clk) disable iff(!intf.rst_n) (count===intf.FIFO_DEPTH) |->(intf.full);
+    116                                              endproperty
+    117                                              full_assert: assert property(p5);
+    118                                              full_cvr: cover property(p5);
+    119                                              
+    120                                              property p6;
+    121                                              @(posedge intf.clk) disable iff(!intf.rst_n) (count===(intf.FIFO_DEPTH-1)) |->(intf.almostfull);
+    122                                              endproperty
+    123                                              almostfull_assert: assert property(p6);
+    124                                              almostfull_cvr: cover property(p6);
+    125                                              
+    126                                              property p7;
+    127                                              @(posedge intf.clk) disable iff(!intf.rst_n) (count===1) |->(intf.almostempty);
+    128                                              endproperty
+    129                                              almostempty_assert: assert property(p7);
+    130                                              almostempty_cvr: cover property(p7);
+    131                                              
+    132                                              // Write pointer wraparound
+    133                                              property p8;
+    134                                                @(posedge intf.clk) disable iff(!intf.rst_n)
+    135                                                  (wr_ptr == intf.FIFO_DEPTH-1 && intf.wr_en && !intf.full) |=> (wr_ptr == 0);
+    136                                              endproperty
+    137                                              pointer_wraparound_assert_write: assert property(p8);
+    138                                              pointer_wraparound_cvr_write:   cover property(p8);
+    139                                              
+    140                                              // Read pointer wraparound
+    141                                              property p9;
+    142                                                @(posedge intf.clk) disable iff(!intf.rst_n)
+    143                                                  (rd_ptr == intf.FIFO_DEPTH-1 && intf.rd_en && !intf.empty) |=> (rd_ptr == 0);
+    144                                              endproperty
+    145                                              pointer_wraparound_assert_read: assert property(p9);
+    146                                              pointer_wraparound_cvr_read:   cover property(p9);
+    147                                              
+    148                                              
+    149                                              property p10;
+    150                                              @(posedge intf.clk) disable iff(!intf.rst_n) (wr_ptr<intf.FIFO_DEPTH) && (rd_ptr<intf.FIFO_DEPTH) && (count<=intf.FIFO_DEPTH);
+    151                                              endproperty
+    152                                              threshold_assert: assert property(p10);
+    153                                              threshold_cvr: cover property(p10);
+    154                                              
+    155                                              `endif 
+    156                                              
+    157                                              endmodule
+
+Branch Coverage:
+    Enabled Coverage            Active      Hits    Misses % Covered
+    ----------------            ------      ----    ------ ---------
+    Branches                        31        31         0     100.0
+
+================================Branch Details================================
+
+Branch Coverage for file FIFO.sv --
+
+------------------------------------IF Branch------------------------------------
+    10                                     32613     Count coming in to IF
+    10              1                       5522     	if (!intf.rst_n) begin
+    16              1                       1134     	else if(intf.wr_en && intf.rd_en && intf.empty )begin
+    23              1                      14922     	else if (intf.wr_en && !intf.full)
+    31              1                      11035     	else begin 
+Branch totals: 4 hits of 4 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    27                                     14922     Count coming in to IF
+    27              1                       1041     		wr_ptr <= (wr_ptr == intf.FIFO_DEPTH-1) ? 0 : wr_ptr + 1;//adding checker to check the wraparound
+    27              2                      13881     		wr_ptr <= (wr_ptr == intf.FIFO_DEPTH-1) ? 0 : wr_ptr + 1;//adding checker to check the wraparound
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    33                                     11035     Count coming in to IF
+    33              1                       1120     		if (intf.full && intf.wr_en)
+    35              1                       9915     		else
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    41                                     32613     Count coming in to IF
+    41              1                       5522     	if (!intf.rst_n) begin
+    47              1                       8208     	else if (intf.rd_en && (intf.full || !intf.empty)) 
+    54              1                       1857     		else if (intf.empty && intf.rd_en) //bug==>adding underflow here not below
+                                           17026     All False Count
+Branch totals: 4 hits of 4 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    50                                      8208     Count coming in to IF
+    50              1                        355     		rd_ptr <= (rd_ptr == intf.FIFO_DEPTH-1) ? 0 : rd_ptr + 1;//adding checker to check the wraparound
+    50              2                       7853     		rd_ptr <= (rd_ptr == intf.FIFO_DEPTH-1) ? 0 : rd_ptr + 1;//adding checker to check the wraparound
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    59                                     29495     Count coming in to IF
+    59              1                       5469     	if (!intf.rst_n) begin
+    62              1                      24026     	else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    63                                     24026     Count coming in to IF
+    63              1                       9944     		if	( ({intf.wr_en, intf.rd_en} == 2'b10) && !intf.full) 
+    65              1                       2862     		else if ( ({intf.wr_en, intf.rd_en} == 2'b01) && !intf.empty)
+    67              1                        368     		else if ( ({ intf.wr_en,  intf.rd_en} == 2'b11) && intf.full)  
+    69              1                       1134             else if ( ({ intf.wr_en,  intf.rd_en} == 2'b11) && intf.empty) 
+                                            9718     All False Count
+Branch totals: 5 hits of 5 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    76                                     16633     Count coming in to IF
+    76              1                        745     assign intf.full = (count ==  intf.FIFO_DEPTH)? 1 : 0;
+    76              2                      15888     assign intf.full = (count ==  intf.FIFO_DEPTH)? 1 : 0;
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    77                                     16633     Count coming in to IF
+    77              1                       3119     assign intf.empty = (count == 0)? 1 : 0; 
+    77              2                      13514     assign intf.empty = (count == 0)? 1 : 0; 
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    78                                     16633     Count coming in to IF
+    78              1                       1139     assign intf.almostfull = (count ==  intf.FIFO_DEPTH-1)? 1 : 0; //bug FIFO_DEPTH-2 should be -1
+    78              2                      15494     assign intf.almostfull = (count ==  intf.FIFO_DEPTH-1)? 1 : 0; //bug FIFO_DEPTH-2 should be -1
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    79                                     16633     Count coming in to IF
+    79              1                       3669     assign intf.almostempty = (count == 1)? 1 : 0;
+    79              2                      12964     assign intf.almostempty = (count == 1)? 1 : 0;
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    85                                     26964     Count coming in to IF
+    85              1                       5067     if(!intf.rst_n) begin
+                                           21897     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+
+Condition Coverage:
+    Enabled Coverage            Active   Covered    Misses % Covered
+    ----------------            ------      ----    ------ ---------
+    FEC Condition Terms             24        24         0     100.0
+
+================================Condition Details================================
+
+Condition Coverage for file FIFO.sv --
+
+----------------Focused Condition View-------------------
+Line       16 Item    1  ((intf.wr_en && intf.rd_en) && intf.empty)
+Condition totals: 3 of 3 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.wr_en         Y
+  intf.rd_en         Y
+  intf.empty         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.wr_en_0          -                             
+  Row   2:          1  intf.wr_en_1          (intf.empty && intf.rd_en)    
+  Row   3:          1  intf.rd_en_0          intf.wr_en                    
+  Row   4:          1  intf.rd_en_1          (intf.empty && intf.wr_en)    
+  Row   5:          1  intf.empty_0          (intf.wr_en && intf.rd_en)    
+  Row   6:          1  intf.empty_1          (intf.wr_en && intf.rd_en)    
+
+----------------Focused Condition View-------------------
+Line       23 Item    1  (intf.wr_en && ~intf.full)
+Condition totals: 2 of 2 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.wr_en         Y
+   intf.full         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.wr_en_0          -                             
+  Row   2:          1  intf.wr_en_1          ~intf.full                    
+  Row   3:          1  intf.full_0           intf.wr_en                    
+  Row   4:          1  intf.full_1           intf.wr_en                    
+
+----------------Focused Condition View-------------------
+Line       33 Item    1  (intf.full && intf.wr_en)
+Condition totals: 2 of 2 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+   intf.full         Y
+  intf.wr_en         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.full_0           -                             
+  Row   2:          1  intf.full_1           intf.wr_en                    
+  Row   3:          1  intf.wr_en_0          intf.full                     
+  Row   4:          1  intf.wr_en_1          intf.full                     
+
+----------------Focused Condition View-------------------
+Line       47 Item    1  (intf.rd_en && (intf.full || ~intf.empty))
+Condition totals: 3 of 3 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.rd_en         Y
+   intf.full         Y
+  intf.empty         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.rd_en_0          -                             
+  Row   2:          1  intf.rd_en_1          (intf.full || ~intf.empty)    
+  Row   3:          1  intf.full_0           (intf.rd_en && intf.empty)    
+  Row   4:          1  intf.full_1           intf.rd_en                    
+  Row   5:          1  intf.empty_0          (intf.rd_en && ~intf.full)    
+  Row   6:          1  intf.empty_1          (intf.rd_en && ~intf.full)    
+
+----------------Focused Condition View-------------------
+Line       54 Item    1  (intf.empty && intf.rd_en)
+Condition totals: 2 of 2 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.empty         Y
+  intf.rd_en         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.empty_0          -                             
+  Row   2:          1  intf.empty_1          intf.rd_en                    
+  Row   3:          1  intf.rd_en_0          intf.empty                    
+  Row   4:          1  intf.rd_en_1          intf.empty                    
+
+----------------Focused Condition View-------------------
+Line       63 Item    1  ((~intf.rd_en && intf.wr_en) && ~intf.full)
+Condition totals: 3 of 3 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.rd_en         Y
+  intf.wr_en         Y
+   intf.full         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.rd_en_0          (~intf.full && intf.wr_en)    
+  Row   2:          1  intf.rd_en_1          -                             
+  Row   3:          1  intf.wr_en_0          ~intf.rd_en                   
+  Row   4:          1  intf.wr_en_1          (~intf.full && ~intf.rd_en)   
+  Row   5:          1  intf.full_0           (~intf.rd_en && intf.wr_en)   
+  Row   6:          1  intf.full_1           (~intf.rd_en && intf.wr_en)   
+
+----------------Focused Condition View-------------------
+Line       65 Item    1  ((intf.rd_en && ~intf.wr_en) && ~intf.empty)
+Condition totals: 3 of 3 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.rd_en         Y
+  intf.wr_en         Y
+  intf.empty         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.rd_en_0          -                             
+  Row   2:          1  intf.rd_en_1          (~intf.empty && ~intf.wr_en)  
+  Row   3:          1  intf.wr_en_0          (~intf.empty && intf.rd_en)   
+  Row   4:          1  intf.wr_en_1          intf.rd_en                    
+  Row   5:          1  intf.empty_0          (intf.rd_en && ~intf.wr_en)   
+  Row   6:          1  intf.empty_1          (intf.rd_en && ~intf.wr_en)   
+
+----------------Focused Condition View-------------------
+Line       67 Item    1  ((intf.rd_en && intf.wr_en) && intf.full)
+Condition totals: 3 of 3 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.rd_en         Y
+  intf.wr_en         Y
+   intf.full         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.rd_en_0          -                             
+  Row   2:          1  intf.rd_en_1          (intf.full && intf.wr_en)     
+  Row   3:          1  intf.wr_en_0          intf.rd_en                    
+  Row   4:          1  intf.wr_en_1          (intf.full && intf.rd_en)     
+  Row   5:          1  intf.full_0           (intf.rd_en && intf.wr_en)    
+  Row   6:          1  intf.full_1           (intf.rd_en && intf.wr_en)    
+
+----------------Focused Condition View-------------------
+Line       69 Item    1  ((intf.rd_en && intf.wr_en) && intf.empty)
+Condition totals: 3 of 3 input terms covered = 100.0%
+
+  Input Term   Covered  Reason for no coverage   Hint
+ -----------  --------  -----------------------  --------------
+  intf.rd_en         Y
+  intf.wr_en         Y
+  intf.empty         Y
+
+     Rows:       Hits  FEC Target            Non-masking condition(s)      
+ ---------  ---------  --------------------  -------------------------     
+  Row   1:          1  intf.rd_en_0          -                             
+  Row   2:          1  intf.rd_en_1          (intf.empty && intf.wr_en)    
+  Row   3:          1  intf.wr_en_0          intf.rd_en                    
+  Row   4:          1  intf.wr_en_1          (intf.empty && intf.rd_en)    
+  Row   5:          1  intf.empty_0          (intf.rd_en && intf.wr_en)    
+  Row   6:          1  intf.empty_1          (intf.rd_en && intf.wr_en)    
+
+
+Expression Coverage:
+    Enabled Coverage            Active   Covered    Misses % Covered
+    ----------------            ------      ----    ------ ---------
+    FEC Expression Terms             0         0         0     100.0
+FSM Coverage:
+    Enabled Coverage            Active      Hits    Misses % Covered
+    ----------------            ------      ----    ------ ---------
+    FSMs                                                       100.0
+        States                       0         0         0     100.0
+        Transitions                  0         0         0     100.0
+Toggle Coverage:
+    Enabled Coverage            Active      Hits    Misses % Covered
+    ----------------            ------      ----    ------ ---------
+    Toggle Bins                     20        20         0     100.0
+
+================================Toggle Details================================
+
+Toggle Coverage for File FIFO.sv --
+
+       Line                                   Node      1H->0L      0L->1H  "Coverage"
+--------------------------------------------------------------------------------------
+          6                              wr_ptr[2]           1           1      100.00 
+          6                              wr_ptr[1]           1           1      100.00 
+          6                              wr_ptr[0]           1           1      100.00 
+          6                              rd_ptr[2]           1           1      100.00 
+          6                              rd_ptr[1]           1           1      100.00 
+          6                              rd_ptr[0]           1           1      100.00 
+          7                               count[3]           1           1      100.00 
+          7                               count[2]           1           1      100.00 
+          7                               count[1]           1           1      100.00 
+          7                               count[0]           1           1      100.00 
+
+Total Node Count     =         10 
+Toggled Node Count   =         10 
+Untoggled Node Count =          0 
+
+Toggle Coverage      =      100.0% (20 of 20 bins)
+
+
+DIRECTIVE COVERAGE:
+---------------------------------------------------------------------------------------------
+Name                                     Design Design   Lang File(Line)      Count Status    
+                                         Unit   UnitType                                      
+---------------------------------------------------------------------------------------------
+/\top#DUT /cvr_reset                     FIFO   Verilog  SVA  FIFO.sv(87)      2611 Covered   
+/\top#DUT /wr_ack_cvr                    FIFO   Verilog  SVA  FIFO.sv(94)     14571 Covered   
+/\top#DUT /overflow_cvr                  FIFO   Verilog  SVA  FIFO.sv(100)     1017 Covered   
+/\top#DUT /underflow_cvr                 FIFO   Verilog  SVA  FIFO.sv(106)     1682 Covered   
+/\top#DUT /empty_cvr                     FIFO   Verilog  SVA  FIFO.sv(112)     5029 Covered   
+/\top#DUT /full_cvr                      FIFO   Verilog  SVA  FIFO.sv(118)     1719 Covered   
+/\top#DUT /almostfull_cvr                FIFO   Verilog  SVA  FIFO.sv(124)     1838 Covered   
+/\top#DUT /almostempty_cvr               FIFO   Verilog  SVA  FIFO.sv(130)     5894 Covered   
+/\top#DUT /pointer_wraparound_cvr_write  FIFO   Verilog  SVA  FIFO.sv(138)      953 Covered   
+/\top#DUT /pointer_wraparound_cvr_read   FIFO   Verilog  SVA  FIFO.sv(146)      331 Covered   
+/\top#DUT /threshold_cvr                 FIFO   Verilog  SVA  FIFO.sv(153)    27091 Covered   
+
+TOTAL DIRECTIVE COVERAGE: 100.0%  COVERS: 11
+
+ASSERTION RESULTS:
+-------------------------------------------------------
+Name                 File(Line)           Failure Pass 
+                                          Count   Count 
+-------------------------------------------------------
+/\top#DUT /reset     FIFO.sv(86)                0     1
+/\top#DUT /wr_ack_assert
+                     FIFO.sv(93)                0     1
+/\top#DUT /overflow_assert
+                     FIFO.sv(99)                0     1
+/\top#DUT /underflow_assert
+                     FIFO.sv(105)               0     1
+/\top#DUT /empty_assert
+                     FIFO.sv(111)               0     1
+/\top#DUT /full_assert
+                     FIFO.sv(117)               0     1
+/\top#DUT /almostfull_assert
+                     FIFO.sv(123)               0     1
+/\top#DUT /almostempty_assert
+                     FIFO.sv(129)               0     1
+/\top#DUT /pointer_wraparound_assert_write
+                     FIFO.sv(137)               0     1
+/\top#DUT /pointer_wraparound_assert_read
+                     FIFO.sv(145)               0     1
+/\top#DUT /threshold_assert
+                     FIFO.sv(152)               0     1
+
+Total Coverage By File (code coverage only, filtered view): 100.0%
+
